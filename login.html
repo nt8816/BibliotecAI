@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BibliotecAI - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .floating-icon {
+      position: absolute;
+      opacity: 0.15;
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    .icon-1 { top: 10%; left: 10%; font-size: 3rem; animation-delay: 0s; }
+    .icon-2 { top: 20%; right: 15%; font-size: 2.5rem; animation-delay: 1s; }
+    .icon-3 { bottom: 15%; left: 8%; font-size: 2rem; animation-delay: 2s; }
+    .icon-4 { bottom: 25%; right: 10%; font-size: 3.5rem; animation-delay: 1.5s; }
+    
+    .login-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      padding: 2.5rem;
+      width: 90%;
+      max-width: 420px;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .profile-btn {
+      flex: 1;
+      padding: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .profile-btn:hover {
+      border-color: #2e7d32;
+      background: #f1f8f2;
+    }
+    
+    .profile-btn.active {
+      border-color: #2e7d32;
+      background: #e8f5e9;
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+    }
+    
+    .profile-btn i {
+      font-size: 2rem;
+      color: #2e7d32;
+    }
+    
+    .btn-entrar {
+      background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+      transition: all 0.3s;
+    }
+    
+    .btn-entrar:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46, 125, 50, 0.3);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="floating-icon icon-1"><i class="fas fa-book"></i></div>
+  <div class="floating-icon icon-2"><i class="fas fa-graduation-cap"></i></div>
+  <div class="floating-icon icon-3"><i class="fas fa-bookmark"></i></div>
+  <div class="floating-icon icon-4"><i class="fas fa-user-friends"></i></div>
+
+  <div class="login-card">
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-3">
+        <i class="fas fa-book-reader text-green-700 text-2xl"></i>
+      </div>
+      <h1 class="text-2xl font-bold text-green-800 mb-2">BibliotecAI</h1>
+      <p class="text-gray-600 font-semibold mb-1">Bem-vindo ao BibliotecAI</p>
+      <p class="text-sm text-gray-500">Faça login e transforme sua experiência de leitura</p>
+      <p class="text-sm text-gray-500">Utilize um e-mail fictício para simulação</p>
+    </div>
+
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Selecione seu perfil</label>
+        <div class="flex gap-3">
+          <button type="button" class="profile-btn" id="btn-aluno" onclick="selectProfile('Aluno')">
+            <i class="fas fa-user-graduate"></i>
+            <span class="font-semibold text-gray-700">Aluno</span>
+          </button>
+          <button type="button" class="profile-btn active" id="btn-gestao" onclick="selectProfile('Gestão')">
+            <i class="fas fa-user-tie"></i>
+            <span class="font-semibold text-gray-700">Gestão</span>
+          </button>
+        </div>
+      </div>
+
+      <input type="hidden" id="tipo-perfil" value="Gestão">
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">E-mail ou Matrícula</label>
+        <input 
+          type="text" 
+          id="email" 
+          placeholder="Digite seu e-mail ou matrícula"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          required
+        >
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Senha</label>
+        <div class="relative">
+          <input 
+            type="password" 
+            id="senha" 
+            placeholder="Digite sua senha"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent pr-12"
+            required
+          >
+          <button 
+            type="button" 
+            onclick="togglePassword()"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            <i class="fas fa-eye" id="eye-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span id="error-text"></span>
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn-entrar w-full bg-green-700 text-white py-3 rounded-lg font-semibold hover:bg-green-800 transition"
+      >
+        Entrar
+      </button>
+
+      <div class="flex justify-between text-sm mt-4">
+        <a href="#" class="text-green-700 hover:text-green-800 font-semibold">Esqueceu a senha?</a>
+        <a href="#" class="text-green-700 hover:text-green-800 font-semibold">Criar uma conta</a>
+      </div>
+
+      <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+        <p class="font-semibold mb-1"><i class="fas fa-info-circle mr-2"></i>Credenciais de teste:</p>
+        <p class="mb-1"><strong>Gestor:</strong> Email: <code class="bg-blue-100 px-2 py-1 rounded">admin</code> | Senha: <code class="bg-blue-100 px-2 py-1 rounded">admin</code></p>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    let selectedProfile = 'Gestão';
+
+    function selectProfile(tipo) {
+      selectedProfile = tipo;
+      document.getElementById('tipo-perfil').value = tipo;
+      
+      const btnAluno = document.getElementById('btn-aluno');
+      const btnGestao = document.getElementById('btn-gestao');
+      
+      if (tipo === 'Aluno') {
+        btnAluno.classList.add('active');
+        btnGestao.classList.remove('active');
+      } else {
+        btnGestao.classList.add('active');
+        btnAluno.classList.remove('active');
+      }
+    }
+
+    function togglePassword() {
+      const senhaInput = document.getElementById('senha');
+      const eyeIcon = document.getElementById('eye-icon');
+      
+      if (senhaInput.type === 'password') {
+        senhaInput.type = 'text';
+        eyeIcon.classList.remove('fa-eye');
+        eyeIcon.classList.add('fa-eye-slash');
+      } else {
+        senhaInput.type = 'password';
+        eyeIcon.classList.remove('fa-eye-slash');
+        eyeIcon.classList.add('fa-eye');
+      }
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error-message');
+      const errorText = document.getElementById('error-text');
+      errorText.textContent = message;
+      errorDiv.classList.remove('hidden');
+      
+      setTimeout(() => {
+        errorDiv.classList.add('hidden');
+      }, 5000);
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      const tipo = document.getElementById('tipo-perfil').value;
+      
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, senha, tipo })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('usuario', JSON.stringify(data.usuario));
+          window.location.href = 'dashboard.html';
+        } else {
+          showError(data.message || 'Email/matrícula ou senha incorretos. Use admin/admin para gestor.');
+        }
+      } catch (error) {
+        showError('Erro ao conectar com o servidor. Verifique sua conexão.');
+      }
+    });
+  </script>
+</body>
+</html>

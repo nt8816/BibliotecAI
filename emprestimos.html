@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BibliotecAI - Empréstimos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: 'Nunito', sans-serif; background-color: #f8f9fa; }
+    .sidebar-item:hover { background-color: rgba(255,255,255,0.15); }
+    .sidebar-item.active { background-color: rgba(255,255,255,0.25); }
+    .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+    .modal.show { display: flex; align-items: center; justify-content: center; }
+    .modal-content { background: white; padding: 25px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); animation: slideDown 0.3s ease; }
+    @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .badge-ativo { background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-devolvido { background: #e5e7eb; color: #374151; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-atrasado { background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+  <div class="sidebar fixed top-0 left-0 h-full bg-green-700 text-white w-64 p-4 shadow-lg z-30">
+    <div class="flex items-center justify-center mb-8 mt-4">
+      <div class="text-2xl font-bold flex items-center">
+        <i class="fas fa-book-reader mr-2"></i>
+        <span class="sidebar-text">BibliotecAI</span>
+      </div>
+    </div>
+
+    <nav>
+      <ul class="space-y-4">
+        <li><a href="dashboard.html" class="sidebar-item flex items-center p-3 rounded-lg hover:bg-green-600 transition-all"><i class="fas fa-tachometer-alt text-xl w-8"></i><span class="sidebar-text">Dashboard</span></a></li>
+        <li><a href="livros.html" class="sidebar-item flex items-center p-3 rounded-lg hover:bg-green-600 transition-all"><i class="fas fa-book text-xl w-8"></i><span class="sidebar-text">Livros</span></a></li>
+        <li><a href="usuarios.html" class="sidebar-item flex items-center p-3 rounded-lg hover:bg-green-600 transition-all"><i class="fas fa-users text-xl w-8"></i><span class="sidebar-text">Usuários</span></a></li>
+        <li><a href="emprestimos.html" class="sidebar-item flex items-center p-3 rounded-lg bg-green-600 transition-all active"><i class="fas fa-handshake text-xl w-8"></i><span class="sidebar-text">Empréstimos</span></a></li>
+        <li><a href="relatorios.html" class="sidebar-item flex items-center p-3 rounded-lg hover:bg-green-600 transition-all"><i class="fas fa-chart-line text-xl w-8"></i><span class="sidebar-text">Relatórios</span></a></li>
+        <li><button onclick="logout()" class="sidebar-item flex items-center p-3 rounded-lg hover:bg-green-600 transition-all w-full"><i class="fas fa-sign-out-alt text-xl w-8"></i><span class="sidebar-text">Sair</span></button></li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="main-content ml-64 p-6">
+    <header class="mb-8 flex justify-between items-center">
+      <h1 class="text-3xl font-bold text-green-800">Gestão de Empréstimos</h1>
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <input type="text" id="search-input" placeholder="Buscar empréstimo..." class="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 w-64">
+          <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        </div>
+      </div>
+    </header>
+
+    <div class="mb-6">
+      <button id="btn-add-emprestimo" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md font-semibold transition-all">
+        <i class="fas fa-plus mr-2"></i>Novo Empréstimo
+      </button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+      <table class="min-w-full text-sm text-gray-700">
+        <thead class="bg-green-700 text-white">
+          <tr>
+            <th class="py-3 px-4 text-left">ID</th>
+            <th class="py-3 px-4 text-left">Livro</th>
+            <th class="py-3 px-4 text-left">Autor</th>
+            <th class="py-3 px-4 text-left">Usuário</th>
+            <th class="py-3 px-4 text-left">Tipo</th>
+            <th class="py-3 px-4 text-left">Data Empréstimo</th>
+            <th class="py-3 px-4 text-left">Devolução Prevista</th>
+            <th class="py-3 px-4 text-left">Status</th>
+            <th class="py-3 px-4 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="emprestimos-list" class="divide-y divide-gray-200">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="modal-emprestimo" class="modal">
+    <div class="modal-content">
+      <span class="close text-gray-600 float-right text-2xl cursor-pointer" onclick="closeModal()">&times;</span>
+      <h3 class="text-2xl font-bold text-green-700 mb-4">Novo Empréstimo</h3>
+
+      <form id="form-emprestimo" class="space-y-4">
+        <div>
+          <label class="font-semibold">Livro:</label>
+          <select id="livro-select" class="w-full border rounded-lg p-2" required>
+            <option value="">Selecione um livro...</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-semibold">Usuário:</label>
+          <select id="usuario-select" class="w-full border rounded-lg p-2" required>
+            <option value="">Selecione um usuário...</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-semibold">Observações:</label>
+          <textarea id="observacoes" class="w-full border rounded-lg p-2" rows="3" placeholder="Observações opcionais..."></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-green-700 text-white py-2 rounded-lg font-semibold hover:bg-green-800 transition">
+          Registrar Empréstimo
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+
+    let emprestimos = [];
+    let livros = [];
+    let usuarios = [];
+
+    async function loadData() {
+      try {
+        const [emprestimosRes, livrosRes, usuariosRes] = await Promise.all([
+          fetch('/api/emprestimos', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch('/api/livros', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch('/api/usuarios', { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
+        emprestimos = await emprestimosRes.json();
+        livros = await livrosRes.json();
+        usuarios = await usuariosRes.json();
+
+        renderEmprestimos();
+        populateSelects();
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        alert('Erro ao carregar dados. Faça login novamente.');
+        window.location.href = 'login.html';
+      }
+    }
+
+    function populateSelects() {
+      const livroSelect = document.getElementById('livro-select');
+      const usuarioSelect = document.getElementById('usuario-select');
+
+      livroSelect.innerHTML = '<option value="">Selecione um livro...</option>';
+      livros.filter(l => l.disponivel === 1).forEach(livro => {
+        livroSelect.innerHTML += `<option value="${livro.id}">${livro.titulo} - ${livro.autor}</option>`;
+      });
+
+      usuarioSelect.innerHTML = '<option value="">Selecione um usuário...</option>';
+      usuarios.filter(u => u.tipo !== 'Gestor').forEach(usuario => {
+        usuarioSelect.innerHTML += `<option value="${usuario.id}">${usuario.nome} (${usuario.tipo})</option>`;
+      });
+    }
+
+    function renderEmprestimos() {
+      const tbody = document.getElementById('emprestimos-list');
+      tbody.innerHTML = '';
+
+      if (emprestimos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-gray-500">Nenhum empréstimo registrado</td></tr>';
+        return;
+      }
+
+      emprestimos.forEach(emp => {
+        const dataEmprestimo = new Date(emp.data_emprestimo).toLocaleDateString('pt-BR');
+        const dataDevolucaoPrev = new Date(emp.data_devolucao_prevista).toLocaleDateString('pt-BR');
+        
+        let statusBadge = '';
+        let actionBtn = '';
+        
+        if (emp.status === 'devolvido') {
+          statusBadge = '<span class="badge-devolvido">Devolvido</span>';
+          actionBtn = '<span class="text-gray-400">-</span>';
+        } else {
+          const hoje = new Date();
+          const dataLimite = new Date(emp.data_devolucao_prevista);
+          
+          if (dataLimite < hoje) {
+            statusBadge = '<span class="badge-atrasado">Atrasado</span>';
+          } else {
+            statusBadge = '<span class="badge-ativo">Ativo</span>';
+          }
+          
+          actionBtn = `<button class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-xs" onclick="devolverLivro(${emp.id})"><i class="fas fa-check mr-1"></i>Devolver</button>`;
+        }
+
+        const row = `
+          <tr>
+            <td class="py-2 px-4">#${emp.id}</td>
+            <td class="py-2 px-4">${emp.livro_titulo}</td>
+            <td class="py-2 px-4">${emp.livro_autor}</td>
+            <td class="py-2 px-4">${emp.usuario_nome}</td>
+            <td class="py-2 px-4">${emp.usuario_tipo}</td>
+            <td class="py-2 px-4">${dataEmprestimo}</td>
+            <td class="py-2 px-4">${dataDevolucaoPrev}</td>
+            <td class="py-2 px-4">${statusBadge}</td>
+            <td class="py-2 px-4 text-center">${actionBtn}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    }
+
+    document.getElementById('btn-add-emprestimo').addEventListener('click', () => {
+      document.getElementById('modal-emprestimo').classList.add('show');
+    });
+
+    function closeModal() {
+      document.getElementById('modal-emprestimo').classList.remove('show');
+      document.getElementById('form-emprestimo').reset();
+    }
+
+    document.getElementById('form-emprestimo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const livroId = document.getElementById('livro-select').value;
+      const usuarioId = document.getElementById('usuario-select').value;
+      const observacoes = document.getElementById('observacoes').value;
+
+      try {
+        const response = await fetch('/api/emprestimos', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            livro_id: parseInt(livroId),
+            usuario_id: parseInt(usuarioId),
+            observacoes
+          })
+        });
+
+        if (response.ok) {
+          closeModal();
+          await loadData();
+          alert('Empréstimo registrado com sucesso!');
+        } else {
+          alert('Erro ao registrar empréstimo.');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor.');
+      }
+    });
+
+    async function devolverLivro(emprestimoId) {
+      if (!confirm('Confirmar devolução do livro?')) return;
+
+      try {
+        const response = await fetch(`/api/emprestimos/${emprestimoId}/devolver`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          await loadData();
+          alert('Livro devolvido com sucesso!');
+        } else {
+          alert('Erro ao devolver livro.');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor.');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      window.location.href = 'login.html';
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
