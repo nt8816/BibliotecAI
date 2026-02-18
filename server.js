@@ -49,6 +49,12 @@ function authMiddleware(req, res, next) {
   }
 }
 
+
+function parseId(value) {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
 async function initDb() {
   const client = await pool.connect();
   try {
@@ -190,18 +196,32 @@ app.post('/api/livros', authMiddleware, asyncHandler(async (req, res) => {
 }));
 
 app.put('/api/livros/:livroId', authMiddleware, asyncHandler(async (req, res) => {
-  const id = Number(req.params.livroId);
+  const id = parseId(req.params.livroId);
+  if (!id) return res.status(400).json({ success: false, message: 'ID do livro inválido' });
+
   const d = req.body || {};
-  await pool.query(
+  const result = await pool.query(
     `UPDATE livros SET area=$1, tombo=$2, autor=$3, titulo=$4, vol=$5, edicao=$6, local=$7, editora=$8, ano=$9
      WHERE id=$10`,
     [d.area || '', d.tombo || '', d.autor || '', d.titulo || '', d.vol || '', d.edicao || '', d.local || '', d.editora || '', Number(d.ano || 0), id]
   );
+
+  if (result.rowCount === 0) {
+    return res.status(404).json({ success: false, message: 'Livro não encontrado' });
+  }
+
   return res.json({ success: true });
 }));
 
 app.delete('/api/livros/:livroId', authMiddleware, asyncHandler(async (req, res) => {
-  await pool.query('DELETE FROM livros WHERE id = $1', [Number(req.params.livroId)]);
+  const id = parseId(req.params.livroId);
+  if (!id) return res.status(400).json({ success: false, message: 'ID do livro inválido' });
+
+  const result = await pool.query('DELETE FROM livros WHERE id = $1', [id]);
+  if (result.rowCount === 0) {
+    return res.status(404).json({ success: false, message: 'Livro não encontrado' });
+  }
+
   return res.json({ success: true });
 }));
 
@@ -228,17 +248,31 @@ app.post('/api/usuarios', authMiddleware, asyncHandler(async (req, res) => {
 }));
 
 app.put('/api/usuarios/:usuarioId', authMiddleware, asyncHandler(async (req, res) => {
-  const id = Number(req.params.usuarioId);
+  const id = parseId(req.params.usuarioId);
+  if (!id) return res.status(400).json({ success: false, message: 'ID do usuário inválido' });
+
   const d = req.body || {};
-  await pool.query(
+  const result = await pool.query(
     `UPDATE usuarios SET nome=$1, tipo=$2, matricula=$3, cpf=$4, turma=$5, telefone=$6, email=$7 WHERE id=$8`,
     [d.nome || '', d.tipo || '', d.matricula || '', d.cpf || '', d.turma || '', d.telefone || '', d.email || '', id]
   );
+
+  if (result.rowCount === 0) {
+    return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+  }
+
   return res.json({ success: true });
 }));
 
 app.delete('/api/usuarios/:usuarioId', authMiddleware, asyncHandler(async (req, res) => {
-  await pool.query('DELETE FROM usuarios WHERE id = $1', [Number(req.params.usuarioId)]);
+  const id = parseId(req.params.usuarioId);
+  if (!id) return res.status(400).json({ success: false, message: 'ID do usuário inválido' });
+
+  const result = await pool.query('DELETE FROM usuarios WHERE id = $1', [id]);
+  if (result.rowCount === 0) {
+    return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+  }
+
   return res.json({ success: true });
 }));
 
@@ -256,28 +290,52 @@ app.get('/api/emprestimos', authMiddleware, asyncHandler(async (_req, res) => {
 
 app.post('/api/emprestimos', authMiddleware, asyncHandler(async (req, res) => {
   const d = req.body || {};
-  if (!d.livro_id || !d.usuario_id) {
+  const livroId = parseId(d.livro_id);
+  const usuarioId = parseId(d.usuario_id);
+
+  if (!livroId || !usuarioId) {
     return res.status(400).json({ success: false, message: 'Livro e usuário são obrigatórios' });
   }
 
-  const livroRes = await pool.query('SELECT id, disponivel FROM livros WHERE id = $1 LIMIT 1', [Number(d.livro_id)]);
-  const livro = livroRes.rows[0];
-  if (!livro) return res.status(404).json({ success: false, message: 'Livro não encontrado' });
-  if (Number(livro.disponivel) !== 1) return res.status(409).json({ success: false, message: 'Livro indisponível para empréstimo' });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  const dataDevolucao = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const { rows } = await pool.query(
-    `INSERT INTO emprestimos (livro_id, usuario_id, data_devolucao_prevista, observacoes)
-     VALUES ($1,$2,$3,$4) RETURNING id`,
-    [Number(d.livro_id), Number(d.usuario_id), dataDevolucao, d.observacoes || '']
-  );
-  await pool.query('UPDATE livros SET disponivel = 0 WHERE id = $1', [Number(d.livro_id)]);
+    const livroRes = await client.query('SELECT id, disponivel FROM livros WHERE id = $1 FOR UPDATE', [livroId]);
+    const livro = livroRes.rows[0];
+    if (!livro) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, message: 'Livro não encontrado' });
+    }
 
-  return res.status(201).json({ success: true, id: rows[0].id });
+    if (Number(livro.disponivel) !== 1) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ success: false, message: 'Livro indisponível para empréstimo' });
+    }
+
+    const dataDevolucao = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const insert = await client.query(
+      `INSERT INTO emprestimos (livro_id, usuario_id, data_devolucao_prevista, observacoes)
+       VALUES ($1,$2,$3,$4) RETURNING id`,
+      [livroId, usuarioId, dataDevolucao, d.observacoes || '']
+    );
+
+    await client.query('UPDATE livros SET disponivel = 0 WHERE id = $1', [livroId]);
+
+    await client.query('COMMIT');
+    return res.status(201).json({ success: true, id: insert.rows[0].id });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }));
 
 app.post('/api/emprestimos/:emprestimoId/devolver', authMiddleware, asyncHandler(async (req, res) => {
-  const id = Number(req.params.emprestimoId);
+  const id = parseId(req.params.emprestimoId);
+  if (!id) return res.status(400).json({ success: false, message: 'ID do empréstimo inválido' });
+
   const result = await pool.query('SELECT livro_id, status FROM emprestimos WHERE id = $1 LIMIT 1', [id]);
   const emprestimo = result.rows[0];
   if (!emprestimo) return res.status(404).json({ success: false, message: 'Empréstimo não encontrado' });
