@@ -21,13 +21,13 @@ BibliotecAI é um sistema de gestão de biblioteca desenvolvido em HTML, CSS e J
 ├── sidebar-fix.js          # Adiciona menu de empréstimos dinamicamente
 ├── style.css               # Estilos customizados
 ├── server.py               # Backend Flask com APIs REST
-└── bibliotecai.db          # Banco de dados SQLite
+└── SUPABASE_SETUP.md       # Guia de configuração Supabase
 ```
 
 ## Tecnologias Utilizadas
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Backend**: Flask (Python)
-- **Banco de Dados**: SQLite (padrão) ou Supabase Postgres (opcional)
+- **Banco de Dados**: Supabase Postgres
 - **Autenticação**: JWT (JSON Web Tokens)
 - **Frameworks CSS**: TailwindCSS (via CDN)
 - **Ícones**: Font Awesome 6.4.0
@@ -122,10 +122,10 @@ O backend agora suporta Supabase via string de conexão Postgres.
 3. Inicie o servidor normalmente:
    - `python server.py`
 
-Se `SUPABASE_DB_URL` não estiver definida, o sistema usa SQLite automaticamente.
+`SUPABASE_DB_URL` é obrigatória nesta versão.
 
 ## Persistência de Dados
-- Os dados são armazenados em **banco de dados SQLite** (`bibliotecai.db`)
+- Os dados são armazenados em **Supabase Postgres**
 - Dados persistem entre sessões
 - Suporta operações CRUD completas
 - Integridade referencial entre tabelas
@@ -134,7 +134,7 @@ Se `SUPABASE_DB_URL` não estiver definida, o sistema usa SQLite automaticamente
 Este é um aplicativo **full-stack** com:
 - **Frontend**: HTML/CSS/JavaScript puro
 - **Backend**: Flask com APIs REST
-- **Banco de Dados**: SQLite (padrão) ou Supabase Postgres (opcional)
+- **Banco de Dados**: Supabase Postgres
 - **Autenticação**: JWT (JSON Web Tokens)
 - **Segurança**: Senhas criptografadas com bcrypt
 - **Comunicação**: APIs REST com JSON
@@ -174,7 +174,7 @@ O sistema possui uma sidebar fixa com navegação entre:
 
 ## Estado Atual
 - ✅ Backend Flask completo e funcional
-- ✅ Banco de dados SQLite integrado
+- ✅ Banco de dados Supabase Postgres integrado
 - ✅ Sistema de autenticação JWT
 - ✅ Tela de login customizada
 - ✅ Sistema de CRUD para livros
