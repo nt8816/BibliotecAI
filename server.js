@@ -10,9 +10,15 @@ const PORT = Number(process.env.PORT || 5000);
 const JWT_SECRET = (process.env.JWT_SECRET_KEY || '').trim() || 'bibliotecai-secret-key-2025';
 const JWT_EXPIRES = '24h';
 const SUPABASE_DB_URL = (process.env.SUPABASE_DB_URL || '').trim();
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim();
+const SUPABASE_ANON_KEY = (process.env.SUPABASE_ANON_KEY || '').trim();
 
 if (!SUPABASE_DB_URL) {
-  throw new Error('SUPABASE_DB_URL não configurada. Configure a conexão Postgres do Supabase.');
+  const hasPublicSupabaseConfig = Boolean(SUPABASE_URL || SUPABASE_ANON_KEY);
+  const hint = hasPublicSupabaseConfig
+    ? 'Você definiu SUPABASE_URL/SUPABASE_ANON_KEY, mas o backend Node precisa de SUPABASE_DB_URL (connection string Postgres em Connect > URI).'
+    : 'Configure SUPABASE_DB_URL com a connection string Postgres do Supabase (Connect > URI).';
+  throw new Error(`SUPABASE_DB_URL não configurada. ${hint}`);
 }
 
 const pool = new Pool({

@@ -1,5 +1,15 @@
 const API_URL_STORAGE_KEY = 'api_url';
 
+
+function getSupabasePublicConfig() {
+  return window.BIBLIOTECAI_SUPABASE || null;
+}
+
+function getSupabaseProjectUrl() {
+  const cfg = getSupabasePublicConfig();
+  return cfg && cfg.url ? cfg.url : '';
+}
+
 function normalizeApiUrl(url) {
   return (url || '').trim().replace(/\/$/, '');
 }
@@ -23,6 +33,8 @@ function getApiUrl() {
   if (runtimeApiUrl) return runtimeApiUrl;
   if (savedApiUrl) return savedApiUrl;
 
+  // Mantém padrão local para backend próprio. URL do Supabase fica disponível
+  // para integrações futuras via window.BIBLIOTECAI_SUPABASE.
   return getDefaultLocalApiUrl();
 }
 

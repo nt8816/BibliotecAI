@@ -43,3 +43,11 @@ npm run start
 
 ## 7) Frontend em outro host
 Se o frontend não estiver no mesmo domínio da API, informe a URL da API na tela de login.
+
+
+## 8) Dados que você me enviou (já integrados no front)
+- URL do projeto: `https://dhjkjwkitufsvhlhcsec.supabase.co`
+- Chave anônima: configurada em `supabase-config.js`
+- Chave publicável: configurada em `supabase-config.js`
+
+> Importante: essas chaves públicas **não substituem** `SUPABASE_DB_URL` no backend.
