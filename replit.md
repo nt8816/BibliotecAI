@@ -21,13 +21,13 @@ BibliotecAI é um sistema de gestão de biblioteca desenvolvido em HTML, CSS e J
 ├── sidebar-fix.js          # Adiciona menu de empréstimos dinamicamente
 ├── style.css               # Estilos customizados
 ├── server.py               # Backend Flask com APIs REST
-└── bibliotecai.db          # Banco de dados SQLite
+└── SUPABASE_SETUP.md       # Guia de configuração Supabase
 ```
 
 ## Tecnologias Utilizadas
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Backend**: Flask (Python)
-- **Banco de Dados**: SQLite
+- **Banco de Dados**: Supabase Postgres
 - **Autenticação**: JWT (JSON Web Tokens)
 - **Frameworks CSS**: TailwindCSS (via CDN)
 - **Ícones**: Font Awesome 6.4.0
@@ -112,8 +112,20 @@ python server.py
    - **Gestor**: Email: `admin` | Senha: `admin`
 4. Após login, você terá acesso a todas as funcionalidades
 
+
+### Configuração com Supabase (Postgres)
+O backend agora suporta Supabase via string de conexão Postgres.
+
+1. Crie um banco no Supabase e copie a connection string (URI Postgres).
+2. Defina a variável de ambiente:
+   - `SUPABASE_DB_URL=postgresql://USER:PASS@HOST:5432/postgres`
+3. Inicie o servidor normalmente:
+   - `python server.py`
+
+`SUPABASE_DB_URL` é obrigatória nesta versão.
+
 ## Persistência de Dados
-- Os dados são armazenados em **banco de dados SQLite** (`bibliotecai.db`)
+- Os dados são armazenados em **Supabase Postgres**
 - Dados persistem entre sessões
 - Suporta operações CRUD completas
 - Integridade referencial entre tabelas
@@ -122,7 +134,7 @@ python server.py
 Este é um aplicativo **full-stack** com:
 - **Frontend**: HTML/CSS/JavaScript puro
 - **Backend**: Flask com APIs REST
-- **Banco de Dados**: SQLite
+- **Banco de Dados**: Supabase Postgres
 - **Autenticação**: JWT (JSON Web Tokens)
 - **Segurança**: Senhas criptografadas com bcrypt
 - **Comunicação**: APIs REST com JSON
@@ -162,7 +174,7 @@ O sistema possui uma sidebar fixa com navegação entre:
 
 ## Estado Atual
 - ✅ Backend Flask completo e funcional
-- ✅ Banco de dados SQLite integrado
+- ✅ Banco de dados Supabase Postgres integrado
 - ✅ Sistema de autenticação JWT
 - ✅ Tela de login customizada
 - ✅ Sistema de CRUD para livros

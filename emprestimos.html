@@ -112,6 +112,7 @@
     </div>
   </div>
 
+  <script src="app.js"></script>
   <script>
     const token = localStorage.getItem('token');
     if (!token) {
@@ -119,22 +120,23 @@
     }
 
     let emprestimos = [];
+    let emprestimosFiltrados = [];
     let livros = [];
     let usuarios = [];
 
     async function loadData() {
       try {
         const [emprestimosRes, livrosRes, usuariosRes] = await Promise.all([
-          fetch('/api/emprestimos', { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch('/api/livros', { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch('/api/usuarios', { headers: { 'Authorization': `Bearer ${token}` } })
+          fetchWithApiFallback('/api/emprestimos', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetchWithApiFallback('/api/livros', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetchWithApiFallback('/api/usuarios', { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         emprestimos = await emprestimosRes.json();
         livros = await livrosRes.json();
         usuarios = await usuariosRes.json();
 
-        renderEmprestimos();
+        applyEmprestimoFilter();
         populateSelects();
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -162,12 +164,12 @@
       const tbody = document.getElementById('emprestimos-list');
       tbody.innerHTML = '';
 
-      if (emprestimos.length === 0) {
+      if (emprestimosFiltrados.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-gray-500">Nenhum empréstimo registrado</td></tr>';
         return;
       }
 
-      emprestimos.forEach(emp => {
+      emprestimosFiltrados.forEach(emp => {
         const dataEmprestimo = new Date(emp.data_emprestimo).toLocaleDateString('pt-BR');
         const dataDevolucaoPrev = new Date(emp.data_devolucao_prevista).toLocaleDateString('pt-BR');
         
@@ -207,6 +209,19 @@
       });
     }
 
+
+    function applyEmprestimoFilter() {
+      const termo = document.getElementById('search-input').value.trim().toLowerCase();
+      emprestimosFiltrados = emprestimos.filter((emp) => {
+        const searchable = `${emp.id} ${emp.livro_titulo} ${emp.livro_autor} ${emp.usuario_nome} ${emp.usuario_tipo} ${emp.status}`.toLowerCase();
+        return searchable.includes(termo);
+      });
+
+      renderEmprestimos();
+    }
+
+    document.getElementById('search-input').addEventListener('input', applyEmprestimoFilter);
+
     document.getElementById('btn-add-emprestimo').addEventListener('click', () => {
       document.getElementById('modal-emprestimo').classList.add('show');
     });
@@ -224,7 +239,7 @@
       const observacoes = document.getElementById('observacoes').value;
 
       try {
-        const response = await fetch('/api/emprestimos', {
+        const response = await fetchWithApiFallback('/api/emprestimos', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -246,7 +261,7 @@
         }
       } catch (error) {
         console.error('Erro:', error);
-        alert('Erro ao conectar com o servidor.');
+        alert('Erro ao conectar com o servidor. Verifique a URL da API na tela de login.');
       }
     });
 
@@ -254,7 +269,7 @@
       if (!confirm('Confirmar devolução do livro?')) return;
 
       try {
-        const response = await fetch(`/api/emprestimos/${emprestimoId}/devolver`, {
+        const response = await fetchWithApiFallback(`/api/emprestimos/${emprestimoId}/devolver`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -269,7 +284,7 @@
         }
       } catch (error) {
         console.error('Erro:', error);
-        alert('Erro ao conectar com o servidor.');
+        alert('Erro ao conectar com o servidor. Verifique a URL da API na tela de login.');
       }
     }
 

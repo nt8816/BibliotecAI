@@ -158,6 +158,20 @@
         <span id="error-text"></span>
       </div>
 
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+        <label class="block text-xs font-semibold text-gray-700 mb-2">URL da API (necessário no Netlify)</label>
+        <div class="flex gap-2">
+          <input
+            type="url"
+            id="api-url"
+            placeholder="https://seu-backend.onrender.com"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+          <button type="button" id="btn-save-api" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-semibold">Salvar</button>
+          <button type="button" id="btn-clear-api" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-semibold">Limpar</button>
+        </div>
+      </div>
+
       <button 
         type="submit" 
         class="btn-entrar w-full bg-green-700 text-white py-3 rounded-lg font-semibold hover:bg-green-800 transition"
@@ -177,6 +191,7 @@
     </form>
   </div>
 
+  <script src="app.js"></script>
   <script>
     let selectedProfile = 'Gestão';
 
@@ -222,24 +237,42 @@
       }, 5000);
     }
 
+    const apiUrlInput = document.getElementById('api-url');
+    const btnSaveApi = document.getElementById('btn-save-api');
+    const btnClearApi = document.getElementById('btn-clear-api');
+
+    apiUrlInput.value = getApiUrl();
+
+    btnSaveApi.addEventListener('click', () => {
+      const saved = setApiUrl(apiUrlInput.value);
+      apiUrlInput.value = saved;
+    });
+
+    btnClearApi.addEventListener('click', () => {
+      clearApiUrl();
+      apiUrlInput.value = '';
+    });
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const email = document.getElementById('email').value;
       const senha = document.getElementById('senha').value;
       const tipo = document.getElementById('tipo-perfil').value;
-      
+
+      setApiUrl(apiUrlInput.value);
+
       try {
-        const response = await fetch('/api/login', {
+        const response = await fetchWithApiFallback('/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ email, senha, tipo })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
           localStorage.setItem('token', data.token);
           localStorage.setItem('usuario', JSON.stringify(data.usuario));
@@ -248,7 +281,12 @@
           showError(data.message || 'Email/matrícula ou senha incorretos. Use admin/admin para gestor.');
         }
       } catch (error) {
-        showError('Erro ao conectar com o servidor. Verifique sua conexão.');
+        const apiBase = getApiUrl();
+        if (!apiBase && window.location.hostname.includes('netlify')) {
+          showError('No Netlify, configure a URL da API antes de entrar (ex.: backend no Render/Railway).');
+        } else {
+          showError('Erro ao conectar com o servidor. Se estiver local, clique em Limpar no campo URL da API e tente novamente.');
+        }
       }
     });
   </script>
