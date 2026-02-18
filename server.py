@@ -8,8 +8,12 @@ import os
 import psycopg
 from psycopg.rows import dict_row
 
+DEFAULT_JWT_SECRET = 'bibliotecai-secret-key-2025'
+JWT_SECRET = (os.getenv('JWT_SECRET_KEY') or '').strip() or DEFAULT_JWT_SECRET
+
 app = Flask(__name__, static_folder='.')
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'bibliotecai-secret-key-2025')
+app.config['JWT_SECRET_KEY'] = JWT_SECRET
+app.config['SECRET_KEY'] = JWT_SECRET
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 
 CORS(app)
