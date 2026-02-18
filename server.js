@@ -24,6 +24,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+
+function asyncHandler(fn) {
+  return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+}
+
 function signToken(usuario) {
   return jwt.sign({ id: usuario.id, tipo: usuario.tipo }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 }
@@ -105,16 +110,16 @@ async function initDb() {
   }
 }
 
-app.get('/api/health', async (_req, res) => {
+app.get('/api/health', asyncHandler(async (_req, res) => {
   try {
     await pool.query('SELECT 1');
     return res.json({ ok: true, db_mode: 'postgres' });
   } catch (error) {
     return res.status(500).json({ ok: false, message: 'Falha na conexão com Postgres' });
   }
-});
+}));
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', asyncHandler(async (req, res) => {
   const { email = '', senha = '', tipo = 'Aluno' } = req.body || {};
   const userId = String(email).trim();
 
@@ -151,14 +156,14 @@ app.post('/api/login', async (req, res) => {
   }
 
   return res.status(401).json({ success: false, message: 'Perfil não autorizado para este login' });
-});
+}));
 
-app.get('/api/livros', authMiddleware, async (_req, res) => {
+app.get('/api/livros', authMiddleware, asyncHandler(async (_req, res) => {
   const { rows } = await pool.query('SELECT * FROM livros ORDER BY id DESC');
   return res.json(rows);
-});
+}));
 
-app.post('/api/livros', authMiddleware, async (req, res) => {
+app.post('/api/livros', authMiddleware, asyncHandler(async (req, res) => {
   const data = req.body || {};
   const required = ['area', 'tombo', 'autor', 'titulo', 'editora', 'ano'];
   const missing = required.filter((f) => !data[f]);
@@ -182,9 +187,9 @@ app.post('/api/livros', authMiddleware, async (req, res) => {
     ]
   );
   return res.status(201).json({ success: true, id: rows[0].id });
-});
+}));
 
-app.put('/api/livros/:livroId', authMiddleware, async (req, res) => {
+app.put('/api/livros/:livroId', authMiddleware, asyncHandler(async (req, res) => {
   const id = Number(req.params.livroId);
   const d = req.body || {};
   await pool.query(
@@ -193,20 +198,20 @@ app.put('/api/livros/:livroId', authMiddleware, async (req, res) => {
     [d.area || '', d.tombo || '', d.autor || '', d.titulo || '', d.vol || '', d.edicao || '', d.local || '', d.editora || '', Number(d.ano || 0), id]
   );
   return res.json({ success: true });
-});
+}));
 
-app.delete('/api/livros/:livroId', authMiddleware, async (req, res) => {
+app.delete('/api/livros/:livroId', authMiddleware, asyncHandler(async (req, res) => {
   await pool.query('DELETE FROM livros WHERE id = $1', [Number(req.params.livroId)]);
   return res.json({ success: true });
-});
+}));
 
-app.get('/api/usuarios', authMiddleware, async (_req, res) => {
+app.get('/api/usuarios', authMiddleware, asyncHandler(async (_req, res) => {
   const { rows } = await pool.query('SELECT * FROM usuarios ORDER BY id DESC');
   const sanitized = rows.map(({ senha, ...rest }) => rest);
   return res.json(sanitized);
-});
+}));
 
-app.post('/api/usuarios', authMiddleware, async (req, res) => {
+app.post('/api/usuarios', authMiddleware, asyncHandler(async (req, res) => {
   const d = req.body || {};
   if (!d.nome || !d.tipo) {
     return res.status(400).json({ success: false, message: 'Nome e tipo são obrigatórios' });
@@ -220,9 +225,9 @@ app.post('/api/usuarios', authMiddleware, async (req, res) => {
   );
 
   return res.status(201).json({ success: true, id: rows[0].id });
-});
+}));
 
-app.put('/api/usuarios/:usuarioId', authMiddleware, async (req, res) => {
+app.put('/api/usuarios/:usuarioId', authMiddleware, asyncHandler(async (req, res) => {
   const id = Number(req.params.usuarioId);
   const d = req.body || {};
   await pool.query(
@@ -230,14 +235,14 @@ app.put('/api/usuarios/:usuarioId', authMiddleware, async (req, res) => {
     [d.nome || '', d.tipo || '', d.matricula || '', d.cpf || '', d.turma || '', d.telefone || '', d.email || '', id]
   );
   return res.json({ success: true });
-});
+}));
 
-app.delete('/api/usuarios/:usuarioId', authMiddleware, async (req, res) => {
+app.delete('/api/usuarios/:usuarioId', authMiddleware, asyncHandler(async (req, res) => {
   await pool.query('DELETE FROM usuarios WHERE id = $1', [Number(req.params.usuarioId)]);
   return res.json({ success: true });
-});
+}));
 
-app.get('/api/emprestimos', authMiddleware, async (_req, res) => {
+app.get('/api/emprestimos', authMiddleware, asyncHandler(async (_req, res) => {
   const { rows } = await pool.query(`
     SELECT e.*, l.titulo AS livro_titulo, l.autor AS livro_autor,
            u.nome AS usuario_nome, u.tipo AS usuario_tipo, u.telefone AS usuario_telefone
@@ -247,9 +252,9 @@ app.get('/api/emprestimos', authMiddleware, async (_req, res) => {
     ORDER BY e.id DESC
   `);
   return res.json(rows);
-});
+}));
 
-app.post('/api/emprestimos', authMiddleware, async (req, res) => {
+app.post('/api/emprestimos', authMiddleware, asyncHandler(async (req, res) => {
   const d = req.body || {};
   if (!d.livro_id || !d.usuario_id) {
     return res.status(400).json({ success: false, message: 'Livro e usuário são obrigatórios' });
@@ -269,9 +274,9 @@ app.post('/api/emprestimos', authMiddleware, async (req, res) => {
   await pool.query('UPDATE livros SET disponivel = 0 WHERE id = $1', [Number(d.livro_id)]);
 
   return res.status(201).json({ success: true, id: rows[0].id });
-});
+}));
 
-app.post('/api/emprestimos/:emprestimoId/devolver', authMiddleware, async (req, res) => {
+app.post('/api/emprestimos/:emprestimoId/devolver', authMiddleware, asyncHandler(async (req, res) => {
   const id = Number(req.params.emprestimoId);
   const result = await pool.query('SELECT livro_id, status FROM emprestimos WHERE id = $1 LIMIT 1', [id]);
   const emprestimo = result.rows[0];
@@ -282,9 +287,9 @@ app.post('/api/emprestimos/:emprestimoId/devolver', authMiddleware, async (req, 
   await pool.query("UPDATE emprestimos SET status = 'devolvido', data_devolucao_real = $1 WHERE id = $2", [hoje, id]);
   await pool.query('UPDATE livros SET disponivel = 1 WHERE id = $1', [emprestimo.livro_id]);
   return res.json({ success: true });
-});
+}));
 
-app.get('/api/stats', authMiddleware, async (_req, res) => {
+app.get('/api/stats', authMiddleware, asyncHandler(async (_req, res) => {
   const [livros, usuarios, ativos, atrasados] = await Promise.all([
     pool.query('SELECT COUNT(*)::int AS total FROM livros'),
     pool.query("SELECT COUNT(*)::int AS total FROM usuarios WHERE tipo != 'Gestor'"),
@@ -299,7 +304,7 @@ app.get('/api/stats', authMiddleware, async (_req, res) => {
     alertas: atrasados.rows[0].total,
     db_mode: 'postgres'
   });
-});
+}));
 
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
