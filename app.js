@@ -4,19 +4,26 @@ function normalizeApiUrl(url) {
   return (url || '').trim().replace(/\/$/, '');
 }
 
+function getDefaultLocalApiUrl() {
+  const host = window.location.hostname;
+  const isLocal = host === 'localhost' || host === '127.0.0.1';
+  const isBackendPort = window.location.port === '5000';
+
+  if (isLocal && !isBackendPort) {
+    return `${window.location.protocol}//${host}:5000`;
+  }
+
+  return '';
+}
+
 function getApiUrl() {
   const runtimeApiUrl = normalizeApiUrl(window.BIBLIOTECAI_API_URL || '');
   const savedApiUrl = normalizeApiUrl(localStorage.getItem(API_URL_STORAGE_KEY) || '');
 
-  if (runtimeApiUrl) {
-    return runtimeApiUrl;
-  }
+  if (runtimeApiUrl) return runtimeApiUrl;
+  if (savedApiUrl) return savedApiUrl;
 
-  if (savedApiUrl) {
-    return savedApiUrl;
-  }
-
-  return '';
+  return getDefaultLocalApiUrl();
 }
 
 function setApiUrl(url) {

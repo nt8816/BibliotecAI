@@ -27,7 +27,7 @@ BibliotecAI é um sistema de gestão de biblioteca desenvolvido em HTML, CSS e J
 ## Tecnologias Utilizadas
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Backend**: Flask (Python)
-- **Banco de Dados**: SQLite
+- **Banco de Dados**: SQLite (padrão) ou Supabase Postgres (opcional)
 - **Autenticação**: JWT (JSON Web Tokens)
 - **Frameworks CSS**: TailwindCSS (via CDN)
 - **Ícones**: Font Awesome 6.4.0
@@ -112,6 +112,18 @@ python server.py
    - **Gestor**: Email: `admin` | Senha: `admin`
 4. Após login, você terá acesso a todas as funcionalidades
 
+
+### Configuração com Supabase (Postgres)
+O backend agora suporta Supabase via string de conexão Postgres.
+
+1. Crie um banco no Supabase e copie a connection string (URI Postgres).
+2. Defina a variável de ambiente:
+   - `SUPABASE_DB_URL=postgresql://USER:PASS@HOST:5432/postgres`
+3. Inicie o servidor normalmente:
+   - `python server.py`
+
+Se `SUPABASE_DB_URL` não estiver definida, o sistema usa SQLite automaticamente.
+
 ## Persistência de Dados
 - Os dados são armazenados em **banco de dados SQLite** (`bibliotecai.db`)
 - Dados persistem entre sessões
@@ -122,7 +134,7 @@ python server.py
 Este é um aplicativo **full-stack** com:
 - **Frontend**: HTML/CSS/JavaScript puro
 - **Backend**: Flask com APIs REST
-- **Banco de Dados**: SQLite
+- **Banco de Dados**: SQLite (padrão) ou Supabase Postgres (opcional)
 - **Autenticação**: JWT (JSON Web Tokens)
 - **Segurança**: Senhas criptografadas com bcrypt
 - **Comunicação**: APIs REST com JSON
