@@ -127,9 +127,9 @@
     async function loadData() {
       try {
         const [emprestimosRes, livrosRes, usuariosRes] = await Promise.all([
-          fetch(buildApiUrl('/api/emprestimos'), { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(buildApiUrl('/api/livros'), { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(buildApiUrl('/api/usuarios'), { headers: { 'Authorization': `Bearer ${token}` } })
+          fetchWithApiFallback('/api/emprestimos', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetchWithApiFallback('/api/livros', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetchWithApiFallback('/api/usuarios', { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         emprestimos = await emprestimosRes.json();
@@ -239,7 +239,7 @@
       const observacoes = document.getElementById('observacoes').value;
 
       try {
-        const response = await fetch(buildApiUrl('/api/emprestimos'), {
+        const response = await fetchWithApiFallback('/api/emprestimos', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -269,7 +269,7 @@
       if (!confirm('Confirmar devolução do livro?')) return;
 
       try {
-        const response = await fetch(buildApiUrl(`/api/emprestimos/${emprestimoId}/devolver`), {
+        const response = await fetchWithApiFallback(`/api/emprestimos/${emprestimoId}/devolver`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

@@ -168,6 +168,7 @@
             class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
           >
           <button type="button" id="btn-save-api" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-semibold">Salvar</button>
+          <button type="button" id="btn-clear-api" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-semibold">Limpar</button>
         </div>
       </div>
 
@@ -238,12 +239,18 @@
 
     const apiUrlInput = document.getElementById('api-url');
     const btnSaveApi = document.getElementById('btn-save-api');
+    const btnClearApi = document.getElementById('btn-clear-api');
 
     apiUrlInput.value = getApiUrl();
 
     btnSaveApi.addEventListener('click', () => {
       const saved = setApiUrl(apiUrlInput.value);
       apiUrlInput.value = saved;
+    });
+
+    btnClearApi.addEventListener('click', () => {
+      clearApiUrl();
+      apiUrlInput.value = '';
     });
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -256,7 +263,7 @@
       setApiUrl(apiUrlInput.value);
 
       try {
-        const response = await fetch(buildApiUrl('/api/login'), {
+        const response = await fetchWithApiFallback('/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -278,7 +285,7 @@
         if (!apiBase && window.location.hostname.includes('netlify')) {
           showError('No Netlify, configure a URL da API antes de entrar (ex.: backend no Render/Railway).');
         } else {
-          showError('Erro ao conectar com o servidor. Verifique a URL da API e sua conexão.');
+          showError('Erro ao conectar com o servidor. Se estiver local, clique em Limpar no campo URL da API e tente novamente.');
         }
       }
     });

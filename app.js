@@ -31,12 +31,39 @@ function setApiUrl(url) {
   return normalized;
 }
 
+function clearApiUrl() {
+  localStorage.removeItem(API_URL_STORAGE_KEY);
+}
+
 function buildApiUrl(endpoint) {
   if (/^https?:\/\//i.test(endpoint)) {
     return endpoint;
   }
 
   return `${getApiUrl()}${endpoint}`;
+}
+
+function shouldRetryWithSameOrigin(endpoint) {
+  if (/^https?:\/\//i.test(endpoint)) {
+    return false;
+  }
+
+  return Boolean(getApiUrl());
+}
+
+async function fetchWithApiFallback(endpoint, options = {}) {
+  const primaryUrl = buildApiUrl(endpoint);
+
+  try {
+    return await fetch(primaryUrl, options);
+  } catch (error) {
+    if (!shouldRetryWithSameOrigin(endpoint)) {
+      throw error;
+    }
+
+    console.warn('Falha na URL de API configurada, tentando mesma origem:', primaryUrl);
+    return fetch(endpoint, options);
+  }
 }
 
 function getToken() {
@@ -56,7 +83,7 @@ async function apiRequest(endpoint, options = {}) {
   const token = getToken();
   const defaultHeaders = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    Authorization: `Bearer ${token}`
   };
 
   const config = {
@@ -68,7 +95,7 @@ async function apiRequest(endpoint, options = {}) {
   };
 
   try {
-    const response = await fetch(buildApiUrl(endpoint), config);
+    const response = await fetchWithApiFallback(endpoint, config);
 
     if (response.status === 401) {
       localStorage.removeItem('token');
