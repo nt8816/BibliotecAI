@@ -119,6 +119,7 @@
     }
 
     let emprestimos = [];
+    let emprestimosFiltrados = [];
     let livros = [];
     let usuarios = [];
 
@@ -134,7 +135,7 @@
         livros = await livrosRes.json();
         usuarios = await usuariosRes.json();
 
-        renderEmprestimos();
+        applyEmprestimoFilter();
         populateSelects();
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -162,12 +163,12 @@
       const tbody = document.getElementById('emprestimos-list');
       tbody.innerHTML = '';
 
-      if (emprestimos.length === 0) {
+      if (emprestimosFiltrados.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-gray-500">Nenhum empréstimo registrado</td></tr>';
         return;
       }
 
-      emprestimos.forEach(emp => {
+      emprestimosFiltrados.forEach(emp => {
         const dataEmprestimo = new Date(emp.data_emprestimo).toLocaleDateString('pt-BR');
         const dataDevolucaoPrev = new Date(emp.data_devolucao_prevista).toLocaleDateString('pt-BR');
         
@@ -206,6 +207,19 @@
         tbody.innerHTML += row;
       });
     }
+
+
+    function applyEmprestimoFilter() {
+      const termo = document.getElementById('search-input').value.trim().toLowerCase();
+      emprestimosFiltrados = emprestimos.filter((emp) => {
+        const searchable = `${emp.id} ${emp.livro_titulo} ${emp.livro_autor} ${emp.usuario_nome} ${emp.usuario_tipo} ${emp.status}`.toLowerCase();
+        return searchable.includes(termo);
+      });
+
+      renderEmprestimos();
+    }
+
+    document.getElementById('search-input').addEventListener('input', applyEmprestimoFilter);
 
     document.getElementById('btn-add-emprestimo').addEventListener('click', () => {
       document.getElementById('modal-emprestimo').classList.add('show');
