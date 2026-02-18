@@ -112,6 +112,7 @@
     </div>
   </div>
 
+  <script src="app.js"></script>
   <script>
     const token = localStorage.getItem('token');
     if (!token) {
@@ -126,9 +127,9 @@
     async function loadData() {
       try {
         const [emprestimosRes, livrosRes, usuariosRes] = await Promise.all([
-          fetch('/api/emprestimos', { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch('/api/livros', { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch('/api/usuarios', { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch(buildApiUrl('/api/emprestimos'), { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(buildApiUrl('/api/livros'), { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(buildApiUrl('/api/usuarios'), { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         emprestimos = await emprestimosRes.json();
@@ -238,7 +239,7 @@
       const observacoes = document.getElementById('observacoes').value;
 
       try {
-        const response = await fetch('/api/emprestimos', {
+        const response = await fetch(buildApiUrl('/api/emprestimos'), {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -260,7 +261,7 @@
         }
       } catch (error) {
         console.error('Erro:', error);
-        alert('Erro ao conectar com o servidor.');
+        alert('Erro ao conectar com o servidor. Verifique a URL da API na tela de login.');
       }
     });
 
@@ -268,7 +269,7 @@
       if (!confirm('Confirmar devolução do livro?')) return;
 
       try {
-        const response = await fetch(`/api/emprestimos/${emprestimoId}/devolver`, {
+        const response = await fetch(buildApiUrl(`/api/emprestimos/${emprestimoId}/devolver`), {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -283,7 +284,7 @@
         }
       } catch (error) {
         console.error('Erro:', error);
-        alert('Erro ao conectar com o servidor.');
+        alert('Erro ao conectar com o servidor. Verifique a URL da API na tela de login.');
       }
     }
 
