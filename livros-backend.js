@@ -9,6 +9,7 @@ const modalTitle = document.getElementById("modal-title");
 const livroIdInput = document.getElementById("livro-id");
 
 let livros = [];
+let livrosFiltrados = [];
 let editIndex = null;
 let editingLivroId = null;
 
@@ -16,7 +17,7 @@ async function loadLivros() {
   try {
     const response = await apiRequest('/api/livros');
     livros = await response.json();
-    renderTable();
+    applyLivroFilter();
   } catch (error) {
     console.error('Erro ao carregar livros:', error);
     alert('Erro ao carregar livros');
@@ -73,7 +74,13 @@ formLivro.onsubmit = async function(e){
 
 function renderTable(){
   livrosList.innerHTML = "";
-  livros.forEach((livro, index) => {
+
+  if (!livrosFiltrados.length) {
+    livrosList.innerHTML = `<tr><td colspan="11" class="py-6 text-center text-gray-500">Nenhum livro encontrado.</td></tr>`;
+    return;
+  }
+
+  livrosFiltrados.forEach((livro, index) => {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td class="py-2 px-4">${livro.area}</td>
@@ -96,7 +103,7 @@ function renderTable(){
 }
 
 function editLivro(index){
-  const livro = livros[index];
+  const livro = livrosFiltrados[index];
   livroIdInput.value = livro.id;
   document.getElementById("area").value = livro.area;
   document.getElementById("tombo").value = livro.tombo;
@@ -119,7 +126,7 @@ async function deleteLivro(index){
     return;
   }
   
-  const livroId = livros[index].id;
+  const livroId = livrosFiltrados[index].id;
   
   try {
     await apiRequest(`/api/livros/${livroId}`, {
@@ -130,6 +137,23 @@ async function deleteLivro(index){
     console.error('Erro ao deletar livro:', error);
     alert('Erro ao deletar livro');
   }
+}
+
+function applyLivroFilter() {
+  const searchInput = document.getElementById("search-livros");
+  const term = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  livrosFiltrados = livros.filter((livro) => {
+    const searchable = `${livro.id} ${livro.area} ${livro.tombo} ${livro.autor} ${livro.titulo} ${livro.editora} ${livro.ano}`.toLowerCase();
+    return searchable.includes(term);
+  });
+
+  renderTable();
+}
+
+const searchLivros = document.getElementById("search-livros");
+if (searchLivros) {
+  searchLivros.addEventListener("input", applyLivroFilter);
 }
 
 loadLivros();

@@ -11,6 +11,7 @@ const extraFields = document.getElementById("extra-fields");
 const usuarioIdInput = document.getElementById("usuario-id");
 
 let usuarios = [];
+let usuariosFiltrados = [];
 let editIndexU = null;
 let editingUsuarioId = null;
 
@@ -18,7 +19,7 @@ async function loadUsuarios() {
   try {
     const response = await apiRequest('/api/usuarios');
     usuarios = await response.json();
-    renderUsuarios();
+    applyUsuarioFilter();
   } catch (error) {
     console.error('Erro ao carregar usuários:', error);
     alert('Erro ao carregar usuários');
@@ -118,7 +119,12 @@ formU.onsubmit = async function(e) {
 function renderUsuarios() {
   usuariosList.innerHTML = "";
 
-  usuarios.forEach((u, index) => {
+  if (!usuariosFiltrados.length) {
+    usuariosList.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-500">Nenhum usuário encontrado.</td></tr>`;
+    return;
+  }
+
+  usuariosFiltrados.forEach((u, index) => {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td class="py-2 px-4">${u.nome}</td>
@@ -136,7 +142,7 @@ function renderUsuarios() {
 }
 
 function editUsuario(index) {
-  const u = usuarios[index];
+  const u = usuariosFiltrados[index];
   usuarioIdInput.value = u.id;
   document.getElementById("nome").value = u.nome;
   tipoSelect.value = u.tipo;
@@ -170,7 +176,7 @@ async function deleteUsuario(index) {
     return;
   }
   
-  const usuarioId = usuarios[index].id;
+  const usuarioId = usuariosFiltrados[index].id;
   
   try {
     await apiRequest(`/api/usuarios/${usuarioId}`, {
@@ -181,6 +187,23 @@ async function deleteUsuario(index) {
     console.error('Erro ao deletar usuário:', error);
     alert('Erro ao deletar usuário');
   }
+}
+
+function applyUsuarioFilter() {
+  const searchInput = document.getElementById("search-usuarios");
+  const term = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  usuariosFiltrados = usuarios.filter((usuario) => {
+    const searchable = `${usuario.nome} ${usuario.tipo} ${usuario.matricula || ""} ${usuario.cpf || ""} ${usuario.turma || ""} ${usuario.telefone || ""}`.toLowerCase();
+    return searchable.includes(term);
+  });
+
+  renderUsuarios();
+}
+
+const searchUsuarios = document.getElementById("search-usuarios");
+if (searchUsuarios) {
+  searchUsuarios.addEventListener("input", applyUsuarioFilter);
 }
 
 loadUsuarios();
